@@ -15,7 +15,8 @@ use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch
 
 #[global_allocator]
 static HEAP: Heap = Heap::empty();
-
+// test struct with the impl to run the test logic
+// and update the result, based on the result of the test run
 struct Test {
     name: String,
     func: fn() -> bool,
@@ -32,15 +33,17 @@ impl Test {
         }
     }
 }
+// beginn of the main function
 #[entry]
 fn main() -> ! {
     {
+        // introduction of the "heap"
         use core::mem::MaybeUninit;
         const HEAP_SIZE: usize = 1024;
         static mut HEAP_MEM: [MaybeUninit<u8>; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
         unsafe { HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE) }
     }
-    
+    // introduction of the example tests
     fn should_be_ok() -> bool {
         true
     }
@@ -55,19 +58,19 @@ fn main() -> ! {
         let required_temp = 9;
         outside_temp > required_temp
     }
-
+    // adding the tests with context into a test runner
     let test1 = Test { name: "should be OK".to_string(), func: should_be_ok, result: false, expected: true };
     let test2 = Test { name: "should fail".to_string(), func: failed_test, result: false, expected: false };
     let test3 = Test { name: "everything OK".to_string(), func: everything_ok, result: false, expected: true };
     let test4 = Test { name: "outside temperature OK".to_string(), func: outside_temp_ok, result: false, expected: true };
 
     let test_runner: [Test; 4] = [test1, test2, test3, test4];
-
+    // introduction of the different counter
     let mut test_counter = 0;
     let mut fail_counter = 0;
     let mut passed_counter = 0;
     let mut error_counter = 0;
-
+    // running the tests and updating the counter based of the outcome of the tests
     for mut test in test_runner {
         hprintln!("Running: {}", test.name);
         test.run();
@@ -83,6 +86,7 @@ fn main() -> ! {
             }
         test_counter += 1;
     }
+    // summary of the outcome
     hprintln!("Passed: {}, Failed: {}, Error: {}, Tests run: {}", passed_counter, fail_counter, error_counter, test_counter);
 
     debug::exit(debug::EXIT_SUCCESS);
